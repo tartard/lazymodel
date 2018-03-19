@@ -68,6 +68,6 @@ public class ${modelName} {
     // Aspects
     <@renderClasses model.aspects "ASPECT"/>
 
-    // Constraints
+    // List Constraints
     <@renderConstraints model.constraints/>
 }
