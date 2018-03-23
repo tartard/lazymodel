@@ -1,6 +1,7 @@
 package lib.tartard.alfresco.lazymodel;
 
 import lib.tartard.alfresco.lazymodel.services.ConversionConfig;
+import lib.tartard.alfresco.lazymodel.services.ModelConversionException;
 import lib.tartard.alfresco.lazymodel.services.ModelConverter;
 import org.apache.commons.cli.*;
 import org.apache.commons.io.FilenameUtils;
@@ -113,7 +114,13 @@ public class App {
 
             configs.add(config);
         }
-        modelConverter.convert(configs);
+        try {
+            modelConverter.convert(configs);
+        } catch (ModelConversionException e) {
+            // Do nothing, exception is already logged by the service
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
 

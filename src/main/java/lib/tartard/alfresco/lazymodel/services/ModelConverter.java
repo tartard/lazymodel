@@ -6,6 +6,7 @@ import freemarker.template.TemplateException;
 import freemarker.template.TemplateExceptionHandler;
 import org.alfresco.repo.dictionary.M2Model;
 import org.alfresco.service.cmr.dictionary.DictionaryException;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -91,7 +92,12 @@ public class ModelConverter {
             if (model == null || !modelPath.equals(config.getAlfrescoModelPath())) {
                 model = getM2Model(modelPath);
             }
-            outputFiles.add(convert(model, config));
+            try {
+                outputFiles.add(convert(model, config));
+            } catch (ModelConversionException e) {
+                // As we want the other conversions to be performed, we only print the stackTrace.
+                e.printStackTrace();
+            }
         }
         return outputFiles;
     }
@@ -121,6 +127,10 @@ public class ModelConverter {
         String templatePath = config.getFtlTemplatePath();
         LOGGER.trace("Getting ftl template from file '{}'.", templatePath);
 
+        if(StringUtils.isBlank(templatePath)) {
+            throw getException("No template file path provided. Cannot convert model.");
+        }
+
         File templateFile = new File(templatePath);
         File parentDir = templateFile.getParentFile();
 
@@ -149,13 +159,15 @@ public class ModelConverter {
     private File convert(M2Model m2Model, ConversionConfig config) {
         Template template = getTemplate(config);
         Map<String, Object> ftlModel = getFtlModel(m2Model, config);
-        File outPutFile = new File(config.getOutputFile());
-        try {
-            try (Writer fileWriter = new FileWriter(outPutFile)) {
-                template.process(ftlModel, fileWriter);
-            } catch (TemplateException e) {
-                throw getException("Could not process template due to nested Exception :", e);
-            }
+        String outputFilePath = config.getOutputFile();
+        if(StringUtils.isBlank(outputFilePath)) {
+            throw getException("No output file path provided. Cannot perform model conversion.");
+        }
+        File outPutFile = new File(outputFilePath);
+        try (Writer fileWriter = new FileWriter(outPutFile)) {
+            template.process(ftlModel, fileWriter);
+        } catch (TemplateException e) {
+            throw getException("Could not process template due to nested Exception :", e);
         } catch (IOException e) {
             throw getException("Could not write to output file due to nested Exception :", e);
         }
@@ -170,7 +182,7 @@ public class ModelConverter {
      * @return
      */
     private Map<String, Object> getFtlModel(M2Model m2Model, ConversionConfig config) {
-        Map<String, Object> ftlModel = new HashMap<String, Object>();
+        Map<String, Object> ftlModel = new HashMap<>();
         ftlModel.put("model", m2Model);
         return ftlModel;
     }
@@ -184,6 +196,9 @@ public class ModelConverter {
     private M2Model getM2Model(String modelPath) {
         LOGGER.trace("Getting M2Model from file '{}'.", modelPath);
         InputStream modelStream = null;
+        if(StringUtils.isBlank(modelPath)) {
+            throw getException("No model path provided. Cannot convert model.");
+        }
         try {
             modelStream = new FileInputStream(new File(modelPath));
         } catch (FileNotFoundException e) {
