@@ -24,9 +24,9 @@ import static org.junit.Assert.*;
 /**
  * ModelConverter test class.
  *
- * @author Alexandre Hausherr b88779
+ * @author Alexandre Hausherr
  * <p>
- * Created by b88779 on 20/03/2018
+ * Created on 20/03/2018
  */
 @RunWith(JUnit4.class)
 public class ModelConverterTest {

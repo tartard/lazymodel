@@ -11,6 +11,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
 
 /**
@@ -164,6 +166,18 @@ public class ModelConverter {
             throw getException("No output file path provided. Cannot perform model conversion.");
         }
         File outPutFile = new File(outputFilePath);
+
+        // Create the output directory if it doesn't exist.
+        File parent = outPutFile.getParentFile();
+        if(parent != null) {
+            try {
+                Files.createDirectories(Paths.get(parent.toURI()));
+            } catch (IOException e) {
+                throw getException("Could not create output directory :", e);
+            }
+        }
+
+        // Process the template with the m2model
         try (Writer fileWriter = new FileWriter(outPutFile)) {
             template.process(ftlModel, fileWriter);
         } catch (TemplateException e) {
